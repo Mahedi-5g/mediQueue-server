@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT;
 
 const uri = process.env.MONGODB_URI;
@@ -29,19 +29,28 @@ async function run() {
     const db = client.db('mediQueue');
     const tutorCollection = db.collection('tutors-data');
 
-    app.get('/tutors',async(req,res)=>{
+    app.get('/tutors', async (req, res) => {
       const cursor = tutorCollection.find().limit(6);
       const result = await cursor.toArray();
       res.send(result)
     })
 
 
-    app.get('/all-tutors',async(req,res)=>{
+    app.get('/all-tutors', async (req, res) => {
       const cursor = tutorCollection.find();
       const result = await cursor.toArray();
       res.send(result)
     })
-   
+
+
+    app.get('/tutors/:id', async (req, res) => {
+      const {id}=req.params;
+
+      const result = await tutorCollection.findOne({_id: new ObjectId(id)})
+      res.send(result);
+      
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } catch (error) {
