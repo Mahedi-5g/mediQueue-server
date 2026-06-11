@@ -44,10 +44,20 @@ async function run() {
 
 
     app.get('/tutors/:id', async (req, res) => {
-      const {id}=req.params;
+      const { id } = req.params;
 
-      const result = await tutorCollection.findOne({_id: new ObjectId(id)})
+      const result = await tutorCollection.findOne({ _id: new ObjectId(id) })
       res.send(result);
+
+    });
+
+    app.post("/tutors", async (req, res) => {
+      
+        const tutor = req.body;
+
+        const result = await tutorCollection.insertOne(tutor);
+
+        res.send(result);
       
     });
 
