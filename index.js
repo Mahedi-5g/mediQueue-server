@@ -28,6 +28,7 @@ async function run() {
 
     const db = client.db('mediQueue');
     const tutorCollection = db.collection('tutors-data');
+    const bookingCollection = db.collection("bookings");
 
     app.get('/tutors', async (req, res) => {
       const cursor = tutorCollection.find().limit(6);
@@ -52,14 +53,64 @@ async function run() {
     });
 
     app.post("/tutors", async (req, res) => {
-      
-        const tutor = req.body;
 
-        const result = await tutorCollection.insertOne(tutor);
+      const tutor = req.body;
 
-        res.send(result);
-      
+      const result = await tutorCollection.insertOne(tutor);
+
+      res.send(result);
+
     });
+
+    app.get("/bookings/:studentEmail",async(req,res)=>{
+      const{studentEmail} =req.params
+
+      const result = await bookingCollection.find({studentEmail}).toArray();
+      res.json(result)
+
+      console.log(result,studentEmail);
+    })
+
+    app.post("/bookings", async (req, res) => {
+      const booking = req.body;
+      const tutor = await tutorCollection.findOne({
+        _id: new ObjectId(booking.tutorId),
+      });
+      if (!tutor) {
+        return res.status(404).send({
+          message: "Tutor not found",
+        });
+      }
+
+      if (tutor.totalSlot <= 0) {
+        return res.status(400)
+          .send({
+            message:
+              "No available slots left",
+          });
+      }
+
+      const today = new Date();
+      const sessionDate =
+        new Date(tutor.sessionStartDate);
+
+      if (today < sessionDate) {
+        return res.status(400).send({
+          message:
+            "Booking is not available yet for this tutor"
+        });
+      }
+      booking.status = "Booked";
+      const result = await bookingCollection.insertOne(booking);
+      await tutorCollection.updateOne({ _id: new ObjectId(booking.tutorId), },
+        { $inc: { totalSlot: -1, }, });
+
+      return res.send({ success: true, message: "Booking Successful",result });
+    });
+
+
+
+
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
