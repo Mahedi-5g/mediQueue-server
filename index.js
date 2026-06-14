@@ -62,13 +62,13 @@ async function run() {
 
     });
 
-    app.get("/bookings/:studentEmail",async(req,res)=>{
-      const{studentEmail} =req.params
+    app.get("/bookings/:studentEmail", async (req, res) => {
+      const { studentEmail } = req.params
 
-      const result = await bookingCollection.find({studentEmail}).toArray();
+      const result = await bookingCollection.find({ studentEmail }).toArray();
       res.json(result)
 
-      console.log(result,studentEmail);
+      console.log(result, studentEmail);
     })
 
     app.post("/bookings", async (req, res) => {
@@ -105,11 +105,22 @@ async function run() {
       await tutorCollection.updateOne({ _id: new ObjectId(booking.tutorId), },
         { $inc: { totalSlot: -1, }, });
 
-      return res.send({ success: true, message: "Booking Successful",result });
+      return res.send({ success: true, message: "Booking Successful", result });
     });
 
 
 
+    app.patch("/bookings/:id", async (req, res) => {
+      const { id } = req.params;
+
+      const result = await bookingCollection.updateOne({ _id: new ObjectId(id) },
+        {
+          $set: {status: "Cancelled"},
+        }
+      );
+
+      res.send(result);
+    });
 
 
     await client.db("admin").command({ ping: 1 });
