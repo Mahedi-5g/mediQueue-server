@@ -62,14 +62,21 @@ async function run() {
 
     });
 
+    app.get("/my-tutors/:email", async (req, res) => {
+      const { email } = req.params;
+
+      const result = await tutorCollection
+        .find({ userEmail: email }).toArray();
+      res.send(result);
+    });
+
     app.get("/bookings/:studentEmail", async (req, res) => {
       const { studentEmail } = req.params
 
       const result = await bookingCollection.find({ studentEmail }).toArray();
       res.json(result)
-
-      console.log(result, studentEmail);
     })
+
 
     app.post("/bookings", async (req, res) => {
       const booking = req.body;
@@ -115,9 +122,35 @@ async function run() {
 
       const result = await bookingCollection.updateOne({ _id: new ObjectId(id) },
         {
-          $set: {status: "Cancelled"},
+          $set: { status: "Cancelled" },
         }
       );
+
+      res.send(result);
+    });
+
+
+    app.patch("/tutors/:id", async (req, res) => {
+      const { id } = req.params;
+      const updatedTutor = req.body;
+
+      const result = await tutorCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: updatedTutor,
+        }
+      );
+
+      res.send(result);
+    });
+
+
+    app.delete("/tutors/:id", async (req, res) => {
+      const { id } = req.params;
+
+      const result = await tutorCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
 
       res.send(result);
     });
