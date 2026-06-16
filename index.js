@@ -24,7 +24,7 @@ const client = new MongoClient(uri, {
 });
 
 const JWKS = createRemoteJWKSet(
-  new URL("http://localhost:3000/api/auth/jwks")
+  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
 )
 
 
@@ -52,7 +52,7 @@ const verifyToken = async(req,res,next)=>{
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const db = client.db('mediQueue');
     const tutorCollection = db.collection('tutors-data');
@@ -80,7 +80,7 @@ async function run() {
 
     });
 
-    app.post("/tutors", async (req, res) => {
+    app.post("/tutors",verifyToken, async (req, res) => {
 
       const tutor = req.body;
 
@@ -90,7 +90,7 @@ async function run() {
 
     });
 
-    app.get("/my-tutors/:email", async (req, res) => {
+    app.get("/my-tutors/:email",verifyToken, async (req, res) => {
       const { email } = req.params;
 
       const result = await tutorCollection
@@ -106,7 +106,7 @@ async function run() {
     })
 
 
-    app.post("/bookings", async (req, res) => {
+    app.post("/bookings",verifyToken, async (req, res) => {
       const booking = req.body;
       const tutor = await tutorCollection.findOne({
         _id: new ObjectId(booking.tutorId),
@@ -145,7 +145,7 @@ async function run() {
 
 
 
-    app.patch("/bookings/:id", async (req, res) => {
+    app.patch("/bookings/:id",verifyToken, async (req, res) => {
       const { id } = req.params;
 
       const result = await bookingCollection.updateOne({ _id: new ObjectId(id) },
@@ -158,7 +158,7 @@ async function run() {
     });
 
 
-    app.patch("/tutors/:id", async (req, res) => {
+    app.patch("/tutors/:id",verifyToken, async (req, res) => {
       const { id } = req.params;
       const updatedTutor = req.body;
 
@@ -173,7 +173,7 @@ async function run() {
     });
 
 
-    app.delete("/tutors/:id", async (req, res) => {
+    app.delete("/tutors/:id",verifyToken, async (req, res) => {
       const { id } = req.params;
 
       const result = await tutorCollection.deleteOne({
@@ -184,7 +184,7 @@ async function run() {
     });
 
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } catch (error) {
     console.log(error);
